@@ -23,10 +23,13 @@ class DB:
         return user
 
     def find_user_by(self, **kwargs) -> User:
-        try:
-            user = self._session.query(User).filter_by(**kwargs).first()
-            if user is None:
-                raise NoResultFound
-            return user
-        except InvalidRequestError:
-            raise InvalidRequestError("Wrong query arguments passed")
+        """ Find a user by the given keyword arguments """
+        all_users = self._session.query(User)
+        for key, value in kwargs.items():
+            if key not in User.__dict__:
+                raise InvalidRequestError
+            for user in all_users:
+                if getattr(user, key) == value:
+                    return user
+        raise NoResultFound
+
