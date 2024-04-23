@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """ module for db """
+
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -7,30 +9,25 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import InvalidRequestError
 
-from user import Base, User
+from user import User, Base
 
 
 class DB:
-    """ Class for DB """
+    def __init__(self):
+        """
+        Initializes the class instance.
 
-    def __init__(self) -> None:
-        """ Constructor """
-        self._engine = create_engine("sqlite:///a.db",
-                                     echo=False)
-        Base.metadata.drop_all(self._engine)
-        Base.metadata.create_all(self._engine)
-        self.__session = None
+        Parameters:
+            None
 
-    @property
-    def _session(self) -> Session:
-        """ Method that creates a session if not exists """
-        if self.__session is None:
-            DBSession = sessionmaker(bind=self._engine)
-            self.__session = DBSession()
-        return self.__session
+        Returns:
+            None
+        """
+        engine = create_engine('sqlite:///mydatabase.db')
+        Base.metadata.create_all(engine)
+        self._session = sessionmaker(bind=engine)()
 
     def add_user(self, email: str, hashed_password: str) -> User:
-        """ Add a user to the database """
         user = User(email=email, hashed_password=hashed_password)
         self._session.add(user)
         self._session.commit()
