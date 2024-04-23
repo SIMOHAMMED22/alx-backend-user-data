@@ -32,4 +32,3 @@ class DB:
                 if getattr(user, key) == value:
                     return user
         raise NoResultFound
-
