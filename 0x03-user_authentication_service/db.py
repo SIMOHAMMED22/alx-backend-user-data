@@ -4,17 +4,14 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.exc import InvalidRequestError
 
 from user import User, Base
 
 
 class DB:
     def __init__(self):
-        """
-        Constructor for initializing the DB class.
-        It creates an engine to connect to the SQLite database 'mydatabase.db'
-        and sets up the session for interacting with the database.
-        """
         engine = create_engine('sqlite:///mydatabase.db')
         Base.metadata.create_all(engine)
         self._session = sessionmaker(bind=engine)()
@@ -24,3 +21,12 @@ class DB:
         self._session.add(user)
         self._session.commit()
         return user
+
+    def find_user_by(self, **kwargs) -> User:
+        try:
+            user = self._session.query(User).filter_by(**kwargs).first()
+            if user is None:
+                raise NoResultFound
+            return user
+        except InvalidRequestError:
+            raise InvalidRequestError("Wrong query arguments passed")
