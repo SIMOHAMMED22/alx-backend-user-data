@@ -12,6 +12,15 @@ from user import User, Base
 
 class DB:
     def __init__(self):
+        """
+        Initializes the class instance.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
         engine = create_engine('sqlite:///mydatabase.db')
         Base.metadata.create_all(engine)
         self._session = sessionmaker(bind=engine)()
