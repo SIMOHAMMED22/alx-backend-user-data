@@ -42,16 +42,15 @@ class DB:
                     return user
         raise NoResultFound
 
-    def update_user(self, user_id, **kwargs):
+    def update_user(self, user_id: int, **kwargs) -> None:
+        """ Update a user in the database """
         try:
             user = self.find_user_by(id=user_id)
-            for key, value in kwargs.items():
-                if hasattr(user, key):
-                    setattr(user, key, value)
-                else:
-                    raise ValueError(f"Invalid user attribute: {key}")
-            self._session.commit()
         except NoResultFound:
-            print("User not found")
-        except InvalidRequestError as e:
-            print(f"Invalid request error: {e}")
+            raise ValueError()
+        for key, value in kwargs.items():
+            if hasattr(user, key):
+                setattr(user, key, value)
+            else:
+                raise ValueError
+        self._session.commit()
