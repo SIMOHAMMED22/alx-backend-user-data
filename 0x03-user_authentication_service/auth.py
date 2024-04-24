@@ -40,12 +40,10 @@ class Auth:
         :return: The created User object
         :raises ValueError: If a user with the given email already exists
         """
-        user = self._db._session.query(User).filter_by(email=email).first()
-        if user is not None:
-            raise ValueError(f"User {email} already exists")
-
-        hashed_password = self._hash_password(password)
-        user = User(email=email, hashed_password=hashed_password)
-        self._db._session.add(user)
-        self._db._session.commit()
-        return user
+        try:
+            self._db.find_user_by(email=email)
+            raise ValueError("User {} already exists.".format(email))
+        except NoResultFound:
+            hashed_password = _hash_password(password)
+            user = self._db.add_user(email, hashed_password)
+            return user
