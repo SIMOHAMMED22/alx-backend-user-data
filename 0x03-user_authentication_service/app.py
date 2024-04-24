@@ -4,8 +4,9 @@ from flask import Flask, request
 from flask.json import jsonify as flask_jsonify
 from werkzeug.exceptions import BadRequest
 
-app = Flask(__name__)
 from auth import Auth
+
+app = Flask(__name__)
 
 
 @app.route("/", methods=["GET"])
@@ -19,6 +20,7 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", port="5000")
 
 AUTH = Auth()
+
 
 @app.route("/users", methods=["POST"])
 def users():
@@ -39,7 +41,8 @@ def users():
     try:
         user = AUTH.register_user(email, password)
     except ValueError as e:
-        # If the user is already registered, catch the exception and return a 400 status code
+        # If the user is already registered, catch the exception
+        # and return a 400 status code
         if str(e) == f"User {email} already exists":
             return flask_jsonify({"message": "email already registered"}), 400
         else:
