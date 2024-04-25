@@ -62,7 +62,5 @@ class Auth:
 
         # auth.py
 
-    import uuid
-
     def _generate_uuid():
         return str(uuid.uuid4())
