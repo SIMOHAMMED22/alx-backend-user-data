@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import uuid
 import bcrypt
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import sessionmaker
@@ -58,3 +59,10 @@ class Auth:
         user_passwd = user.hashed_password
         passwd = password.encode("utf-8")
         return bcrypt.checkpw(passwd, user_passwd)
+
+        # auth.py
+
+    import uuid
+
+    def _generate_uuid():
+        return str(uuid.uuid4())
