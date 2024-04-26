@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from typing import Union
 import uuid
 import bcrypt
 from sqlalchemy.orm.exc import NoResultFound
@@ -64,3 +65,14 @@ class Auth:
         user_passwd = user.hashed_password
         passwd = password.encode("utf-8")
         return bcrypt.checkpw(passwd, user_passwd)
+
+    def create_session(self, email: str) -> Union[None, str]:
+        """ create session """
+        try:
+            user = self._db.find_user_by(email=email)
+        except NoResultFound:
+            return None
+
+        session_id = _generate_uuid()
+        self._db.update_user(user.id, session_id=session_id)
+        return session_id
