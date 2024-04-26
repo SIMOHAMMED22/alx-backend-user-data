@@ -112,15 +112,23 @@ class Auth:
         return reset_token
 
     def update_password(self, reset_token, password):
-        # Find the user with the corresponding reset token
+        """
+        Update the password for a user using a reset token.
+
+        Args:
+            reset_token (str): The reset token associated with the user.
+            password (str): The new password for the user.
+
+        Raises:
+            ValueError: If the user with the given reset token is not found.
+
+        Returns:
+            None
+        """
         user = UserModel.find_by_reset_token(reset_token)
         if user is None:
-            # If the user does not exist, raise a ValueError exception
             raise ValueError("User not found")
 
-        # Hash the new password
         hashed_password = generate_password_hash(password)
-        # Update the user's hashed_password field with the new hashed password
-        # and set the reset_token field to None
         user.hashed_password = hashed_password
         user.reset_token = None
