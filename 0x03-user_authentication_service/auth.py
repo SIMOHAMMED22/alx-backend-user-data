@@ -1,64 +1,60 @@
 #!/usr/bin/env python3
-
-from typing import TypeVar, Union
-from uuid import uuid4
-import uuid
+"""
+hash password
+"""
 import bcrypt
+from uuid import uuid4
 from sqlalchemy.orm.exc import NoResultFound
-import hashlib
+from typing import (
+    TypeVar,
+    Union
+)
 
 from db import DB
 from user import User
+from typing import TypeVar
 
 U = TypeVar('U', bound=User)
 
 
 def _hash_password(password: str) -> bytes:
-    """Hash a password using bcrypt"""
-    salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
-    return hashed_password
+    """
+    hash pass using bycrpt
+    """
+    passwd = password.encode('utf-8')
+    return bcrypt.hashpw(passwd, bcrypt.gensalt())
 
 
 def _generate_uuid() -> str:
-    """ generate uuid """
-    return str(uuid.uuid4())
+    """
+    Generate uuid
+    """
+    return str(uuid4())
 
 
 class Auth:
-    """Auth class to interact with the authentication database.
+    """Auth class
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._db = DB()
 
-    def _hash_password(self, password: str) -> str:
-        """Hash the given password using SHA-256.
-
-        :param password: The plaintext password to hash
-        :return: The hashed password as a hexadecimal string
-        """
-        hashed_password = hashlib.sha256(password.encode()).hexdigest()
-        return hashed_password
-
     def register_user(self, email: str, password: str) -> User:
-        """Register a new user with the given email and password.
-
-        :param email: The user's email address
-        :param password: The user's plaintext password
-        :return: The created User object
-        :raises ValueError: If a user with the given email already exists
+        """
+        register a new user
         """
         try:
             self._db.find_user_by(email=email)
-            raise ValueError("User {} already exists.".format(email))
         except NoResultFound:
-            hashed_password = _hash_password(password)
-            user = self._db.add_user(email, hashed_password)
+            hashed = _hash_password(password)
+            user = self._db.add_user(email, hashed)
             return user
+        raise ValueError(f"User {email} already exists")
 
     def valid_login(self, email: str, password: str) -> bool:
-        """ validate login """
+        """
+        validated login
+        """
         try:
             user = self._db.find_user_by(email=email)
         except NoResultFound:
@@ -69,7 +65,9 @@ class Auth:
         return bcrypt.checkpw(passwd, user_passwd)
 
     def create_session(self, email: str) -> Union[None, str]:
-        """ create session """
+        """
+        session id for user
+        """
         try:
             user = self._db.find_user_by(email=email)
         except NoResultFound:
@@ -80,7 +78,9 @@ class Auth:
         return session_id
 
     def get_user_from_session_id(self, session_id: str) -> Union[None, U]:
-        """ get user from session id """
+        """
+        validate session id and return corresponding user
+        """
         if session_id is None:
             return None
 
@@ -92,7 +92,9 @@ class Auth:
         return user
 
     def destroy_session(self, user_id: int) -> None:
-        """ destroy session """
+        """
+        destroy session
+        """
         try:
             self._db.update_user(user_id, session_id=None)
         except ValueError:
@@ -100,7 +102,9 @@ class Auth:
         return None
 
     def get_reset_password_token(self, email: str) -> str:
-        """ get reset password token """
+        """
+        resest passwd token
+        """
         try:
             user = self._db.find_user_by(email=email)
         except NoResultFound:
@@ -111,7 +115,9 @@ class Auth:
         return reset_token
 
     def update_password(self, reset_token: str, password: str) -> None:
-        """ update password function """
+        """
+        updates password
+        """
         try:
             user = self._db.find_user_by(reset_token=reset_token)
         except NoResultFound:
