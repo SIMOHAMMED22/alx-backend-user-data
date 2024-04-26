@@ -6,7 +6,6 @@ import bcrypt
 from sqlalchemy.orm.exc import NoResultFound
 import hashlib
 from user import UserModel
-from flask_security import generate_password_hash
 
 from db import DB
 from user import User
@@ -112,23 +111,18 @@ class Auth:
         return reset_token
 
     def update_password(self, reset_token: str, password: str) -> None:
+        """Updates a user's password given the user's reset token.
         """
-        Update the password for a user using a reset token.
-
-        Args:
-            reset_token (str): The reset token associated with the user.
-            password (str): The new password for the user.
-
-        Raises:
-            ValueError: If the user with the given reset token is not found.
-
-        Returns:
-            None
-        """
-        user = UserModel.find_by_reset_token(reset_token)
+        user = None
+        try:
+            user = self._db.find_user_by(reset_token=reset_token)
+        except NoResultFound:
+            user = None
         if user is None:
-            raise ValueError("User not found")
-
-        hashed_password = generate_password_hash(password)
-        user.hashed_password = hashed_password
-        user.reset_token = None
+            raise ValueError()
+        new_password_hash = _hash_password(password)
+        self._db.update_user(
+            user.id,
+            hashed_password=new_password_hash,
+            reset_token=None,
+        )
