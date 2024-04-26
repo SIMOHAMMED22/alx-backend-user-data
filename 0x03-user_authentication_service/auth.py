@@ -11,6 +11,7 @@ from db import DB
 from user import User
 U = TypeVar('U', bound=User)
 
+
 def _hash_password(password: str) -> bytes:
     """Hash a password using bcrypt"""
     salt = bcrypt.gensalt()
