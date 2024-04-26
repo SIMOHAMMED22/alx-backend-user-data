@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Union
+from typing import TypeVar, Union
 import uuid
 import bcrypt
 from sqlalchemy.orm.exc import NoResultFound
@@ -9,7 +9,7 @@ import hashlib
 
 from db import DB
 from user import User
-
+U = TypeVar('U', bound=User)
 
 def _hash_password(password: str) -> bytes:
     """Hash a password using bcrypt"""
@@ -76,3 +76,44 @@ class Auth:
         session_id = _generate_uuid()
         self._db.update_user(user.id, session_id=session_id)
         return session_id
+
+    def get_user_from_session_id(self, session_id: str) -> Union[None, U]:
+        """ get user from session id """
+        if session_id is None:
+            return None
+
+        try:
+            user = self._db.find_user_by(session_id=session_id)
+        except NoResultFound:
+            return None
+
+        return user
+
+    def destroy_session(self, user_id: int) -> None:
+        """ destroy session """
+        try:
+            self._db.update_user(user_id, session_id=None)
+        except ValueError:
+            return None
+        return None
+
+    def get_reset_password_token(self, email: str) -> str:
+        """ get reset password token """
+        try:
+            user = self._db.find_user_by(email=email)
+        except NoResultFound:
+            raise ValueError
+
+        reset_token = _generate_uuid()
+        self._db.update_user(user.id, reset_token=reset_token)
+        return reset_token
+
+    def update_password(self, reset_token: str, password: str) -> None:
+        """ update password function """
+        try:
+            user = self._db.find_user_by(reset_token=reset_token)
+        except NoResultFound:
+            raise ValueError()
+
+        hashed = _hash_password(password)
+        self._db.update_user(user.id, hashed_password=hashed, reset_token=None)
