@@ -4,11 +4,11 @@ from typing import TypeVar, Union
 import uuid
 import bcrypt
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.orm import sessionmaker
 import hashlib
 
 from db import DB
 from user import User
+
 U = TypeVar('U', bound=User)
 
 
@@ -110,11 +110,21 @@ class Auth:
         return reset_token
 
     def update_password(self, reset_token: str, password: str) -> None:
-        """ update password function """
-        try:
-            user = self._db.find_user_by(reset_token=reset_token)
-        except NoResultFound:
-            raise ValueError()
+        """Update the password for the user with the given reset token.
 
-        hashed = _hash_password(password)
-        self._db.update_user(user.id, hashed_password=hashed, reset_token=None)
+        :param reset_token: The reset token for the user
+        :type reset_token: str
+        :param password: The new password for the user
+        :type password: str
+        :return: None
+        :rtype: None
+        """
+        try:
+            user = self._db._session.query(User).filter_by(reset_token=reset_token).first()
+        except NoResultFound:
+            raise ValueError("Invalid reset token")
+
+        hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+        user.hashed_password = hashed_password
+        user.reset_token = None
+        self._db._session.commit()
