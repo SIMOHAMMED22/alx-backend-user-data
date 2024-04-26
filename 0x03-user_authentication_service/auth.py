@@ -120,7 +120,8 @@ class Auth:
         :rtype: None
         """
         try:
-            user = self._db._session.query(User).filter_by(reset_token=reset_token).first()
+            user = self._db._session.query(User).filter_by(
+                reset_token=reset_token).first()
         except NoResultFound:
             raise ValueError("Invalid reset token")
 
