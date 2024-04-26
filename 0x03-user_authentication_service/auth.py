@@ -5,6 +5,8 @@ import uuid
 import bcrypt
 from sqlalchemy.orm.exc import NoResultFound
 import hashlib
+from user import UserModel
+from flask_security import generate_password_hash
 
 from db import DB
 from user import User
@@ -109,23 +111,16 @@ class Auth:
         self._db.update_user(user.id, reset_token=reset_token)
         return reset_token
 
-    def update_password(self, reset_token: str, password: str) -> None:
-        """Update the password for the user with the given reset token.
+    def update_password(self, reset_token, password):
+        # Find the user with the corresponding reset token
+        user = UserModel.find_by_reset_token(reset_token)
+        if user is None:
+            # If the user does not exist, raise a ValueError exception
+            raise ValueError("User not found")
 
-        :param reset_token: The reset token for the user
-        :type reset_token: str
-        :param password: The new password for the user
-        :type password: str
-        :return: None
-        :rtype: None
-        """
-        try:
-            user = self._db._session.query(User).filter_by(
-                reset_token=reset_token).first()
-        except NoResultFound:
-            raise ValueError("Invalid reset token")
-
-        hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+        # Hash the new password
+        hashed_password = generate_password_hash(password)
+        # Update the user's hashed_password field with the new hashed password
+        # and set the reset_token field to None
         user.hashed_password = hashed_password
         user.reset_token = None
-        self._db._session.commit()
